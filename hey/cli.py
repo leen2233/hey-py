@@ -3,8 +3,10 @@ from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
 from rich.console import Console
+import sys
 
 from .config import Config, Model, load_config
+from .memory import get_cache
 
 console = Console()
 
@@ -120,6 +122,12 @@ def run_config() -> None:
     config = load_config()
     if not config:
         config = Config()
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "--clear":
+        cache = get_cache()
+        cache.clear()
+        console.print("[green]Message cache cleared![/]")
+        return
     
     # Show current settings
     console.print("[bold blue]Current Settings:[/]")

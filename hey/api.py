@@ -12,20 +12,8 @@ from rich.markdown import Markdown
 from rich.screen import Screen
 
 from .config import Config
-
-
-@dataclass
-class ChatMessage:
-    """Chat message structure."""
-    role: str
-    content: str
-
-
-@dataclass
-class ChatPayload:
-    """Chat request payload structure."""
-    model: str
-    messages: List[ChatMessage]
+from .memory import get_cache
+from .models import ChatMessage, ChatPayload
 
 
 @dataclass
@@ -110,21 +98,22 @@ def get_vqd(client: httpx.Client, config: Config) -> str:
 
 def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> None:
     """Get chat response from DuckDuckGo."""
-    log_debug("Preparing chat request...", config.verbose)
+    cache = get_cache()
     
-    # build the messages list
-    messages = []
-    messages.append(ChatMessage(role="user", content=config.prompt))
-    messages.append(ChatMessage(role="user", content=query))
+    user_message = ChatMessage(role="user", content=f"my question: {query}")
+    cache.add_message(user_message)
+    
+    # prepare chat history
+    messages = cache.get_messages()
     
     payload = ChatPayload(
-        model=config.model,
+        model=config.model.value,
         messages=messages
     )
-
+    
     # convert dataclass to dictionary for serialization
     payload_dict = {
-        "model": payload.model.value,
+        "model": payload.model,
         "messages": [{"role": msg.role, "content": msg.content} for msg in messages]
     }
 
@@ -170,6 +159,7 @@ def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> 
         with Live(Markdown(current_response), console=console, refresh_per_second=4) as live:
             chunk_count = 0
             last_update = time.time()
+            complete_response = ""
             
             for line in response.iter_lines():
                 if not line:
@@ -192,9 +182,14 @@ def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> 
                             
                         message = data["message"]
                         current_response += message
+                        complete_response += message
                         live.update(Markdown(current_response))
 
                 except json.JSONDecodeError:
                     continue
 
         log_debug("Response complete", config.verbose)
+        
+        if complete_response and not data.get("action") == "error":
+            assistant_message = ChatMessage(role="user", content=f"your answer: {complete_response}")
+            cache.add_message(assistant_message)
