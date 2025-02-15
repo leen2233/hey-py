@@ -22,10 +22,10 @@ from .cli import run_config
 @click.option('--proxy', help='HTTP/HTTPS proxy URL (e.g., http://proxy:8080)')
 @click.option('--socks-proxy', help='SOCKS proxy URL (e.g., socks5://proxy:1080)')
 @click.argument('args', nargs=-1)
-def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | None, 
-         save_prompt: bool, proxy: str | None, socks_proxy: str | None) -> None:
+def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | None,
+        save_prompt: bool, proxy: str | None, socks_proxy: str | None) -> None:
     """Hey - DuckDuckGo Chat CLI.
-    
+
     Examples:
         hey "What is Python?"
         hey how are you
@@ -33,7 +33,7 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
         hey -v "Tell me about asyncio"
         hey --proxy http://proxy:8080 "What's my IP?"
         hey --socks-proxy socks5://proxy:1080 "What's my IP?"
-        
+
         # Configure settings
         hey config
     """
@@ -67,7 +67,7 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
             print(f"\033[31mInvalid HTTP proxy URL format: {proxy}\033[0m", file=sys.stderr)
             sys.exit(1)
         config.proxy = proxy
-        if save_prompt: 
+        if save_prompt:
             config.save()
             print(f"\033[32mSaved proxy settings to config\033[0m")
 
@@ -76,7 +76,7 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
             print(f"\033[31mInvalid SOCKS proxy URL format: {socks_proxy}\033[0m", file=sys.stderr)
             sys.exit(1)
         config.socks_proxy = socks_proxy
-        if save_prompt: 
+        if save_prompt:
             config.save()
             print(f"\033[32mSaved proxy settings to config\033[0m")
 
@@ -114,7 +114,7 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
             console=Console(stderr=True)  # Show on stderr to not interfere with response
         ) as progress:
             task = progress.add_task("", total=None)  # Indeterminate progress
-            
+
             progress.update(task, description="[bold blue]Getting verification token...[/]")
             vqd = api.get_vqd(client, config)
 
