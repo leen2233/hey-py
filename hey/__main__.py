@@ -41,26 +41,21 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
         run_config()
         return
 
-    if not sys.stdout.isatty():
-        print("This program must be run in a terminal", file=sys.stderr)
-        sys.exit(1)
-
-    query_str = ' '.join(args)
-    if not query_str:
-        print("Please provide a query", file=sys.stderr)
-        sys.exit(1)
-
     config = load_config()
     if not config:
         config = Config()
 
+    if agree_tos:
+        if not config.tos:
+            print("\033[32mTOS accepted\033[0m")
+        config.tos = True
+        config.save()
+
     if prompt:
+        config.prompt = prompt
         if save_prompt:
-            config.prompt = prompt
             config.save()
             print(f"\033[32mSaved system prompt to config\033[0m")
-        else:
-            config.prompt = prompt
 
     if proxy:
         if not config.validate_proxy_url(proxy):
@@ -82,12 +77,6 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
 
     config.verbose = verbose
 
-    if agree_tos:
-        if not config.tos:
-            print("\033[32mTOS accepted\033[0m")
-        config.tos = True
-        config.save()
-
     if not config.tos:
         print("\033[31mYou must agree to DuckDuckGo's Terms of Service to use this tool.\033[0m", file=sys.stderr)
         print("Read them here: https://duckduckgo.com/terms", file=sys.stderr)
@@ -95,6 +84,15 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
         print(f"\033[33mNote: if you want to, modify `tos` parameter in {Path(Config.get_path()) / Config.get_file_name()}\033[0m",
               file=sys.stderr)
         sys.exit(3)
+
+    if not sys.stdout.isatty():
+        print("This program must be run in a terminal", file=sys.stderr)
+        sys.exit(1)
+
+    query_str = ' '.join(args)
+    if not query_str:
+        print("Please provide a query", file=sys.stderr)
+        sys.exit(1)
 
     proxies = config.get_proxies()
 
