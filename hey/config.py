@@ -13,8 +13,9 @@ class Model(Enum):
     """Available chat models."""
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"  # Default model
     GPT_4O_MINI = "gpt-4o-mini"
-    LLAMA_3_1_70B = "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
-    MISTRAL_8X7B = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    GPT_O3_MINI = "o3-mini"
+    LLAMA_3_3_70B = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+    MISTRAL_24B = "mistralai/Mistral-Small-24B-Instruct-2501"
 
 
 @dataclass
