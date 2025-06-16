@@ -99,8 +99,13 @@ def get_vqd(client: httpx.Client, config: Config) -> str:
 def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> None:
     """Get chat response from DuckDuckGo."""
     cache = get_cache()
-    
-    user_message = ChatMessage(role="user", content=f"my question: {query}")
+
+    content = ""
+    if config.prompt:
+        content = config.prompt + ": "
+    content += query
+
+    user_message = ChatMessage(role="user", content=content)
     cache.add_message(user_message)
     
     # prepare chat history
