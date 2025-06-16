@@ -13,34 +13,41 @@ console = Console()
 def configure_model(config: Config) -> None:
     """Configure the AI model."""
     models = [Choice(model.value, model.value) for model in Model]
-    current_model = next((i for i, m in enumerate(models) if m.value == config.model.value), 0)
-    
-    model_value = inquirer.select(
+    current_model = next((i for i, m in enumerate(models) if m.value == config.model), 0)
+    models.append(Choice(None, "other..."))
+
+    model = inquirer.select(
         message="Select AI Model:",
         choices=models,
         default=models[current_model],
         qmark="🤖",
     ).execute()
-    
-    config.model = Model(model_value)
-    console.print(f"[green]Model set to: {config.model.value}[/]")
+
+    if not model:
+        model = inquirer.text(
+            message="Enter model name:",
+            qmark="🤖",
+        ).execute()
+
+    config.model = model
+    console.print(f"[green]Model set to: {config.model}[/]")
 
 def configure_prompt(config: Config) -> None:
     """Configure the system prompt."""
     console.print("Current prompt:", "[cyan]" + (config.prompt or "Not set") + "[/]")
-    
+
     set_prompt = inquirer.confirm(
         message="Would you like to set a new system prompt?",
         default=False,
         qmark="💭",
     ).execute()
-    
+
     if set_prompt:
         prompt = inquirer.text(
             message="Enter new system prompt (press Enter to clear):",
             qmark="📝",
         ).execute()
-        
+
         config.prompt = prompt if prompt else None
         if config.prompt:
             console.print(f"[green]System prompt set to: {config.prompt}[/]")
@@ -51,20 +58,20 @@ def configure_proxy(config: Config) -> None:
     """Configure proxy settings."""
     console.print("Current HTTP proxy:", "[cyan]" + (config.proxy or "Not set") + "[/]")
     console.print("Current SOCKS proxy:", "[cyan]" + (config.socks_proxy or "Not set") + "[/]")
-    
+
     # Configure HTTP proxy
     configure_http = inquirer.confirm(
         message="Would you like to configure HTTP proxy?",
         default=False,
         qmark="🌐",
     ).execute()
-    
+
     if configure_http:
         proxy = inquirer.text(
             message="Enter HTTP proxy URL (e.g., http://proxy:8080) or press Enter to clear:",
             qmark="🔗",
         ).execute()
-        
+
         if proxy:
             if config.validate_proxy_url(proxy):
                 config.proxy = proxy
@@ -74,20 +81,20 @@ def configure_proxy(config: Config) -> None:
         else:
             config.proxy = None
             console.print("[yellow]HTTP proxy cleared[/]")
-    
+
     # Configure SOCKS proxy
     configure_socks = inquirer.confirm(
         message="Would you like to configure SOCKS proxy?",
         default=False,
         qmark="🧦",
     ).execute()
-    
+
     if configure_socks:
         proxy = inquirer.text(
             message="Enter SOCKS proxy URL (e.g., socks5://proxy:1080) or press Enter to clear:",
             qmark="🔗",
         ).execute()
-        
+
         if proxy:
             if config.validate_proxy_url(proxy, allow_socks=True):
                 config.socks_proxy = proxy
@@ -104,13 +111,13 @@ def configure_tos(config: Config) -> None:
         console.print("[bold red]Terms of Service[/]")
         console.print("You must agree to DuckDuckGo's Terms of Service to use this tool.")
         console.print("Read them here: [link]https://duckduckgo.com/terms[/]")
-        
+
         agree = inquirer.confirm(
             message="Do you agree to the Terms of Service?",
             default=False,
             qmark="📜",
         ).execute()
-        
+
         if agree:
             config.tos = True
             console.print("[green]Terms of Service accepted[/]")
@@ -122,28 +129,28 @@ def run_config() -> None:
     config = load_config()
     if not config:
         config = Config()
-    
+
     if len(sys.argv) > 1 and sys.argv[1] == "--clear":
         cache = get_cache()
         cache.clear()
         console.print("[green]Message cache cleared![/]")
         return
-    
+
     # Show current settings
     console.print("[bold blue]Current Settings:[/]")
-    console.print(f"Model: [cyan]{config.model.value}[/]")
+    console.print(f"Model: [cyan]{config.model}[/]")
     console.print(f"Terms of Service: [cyan]{'Accepted' if config.tos else 'Not Accepted'}[/]")
     console.print(f"System Prompt: [cyan]{config.prompt or 'Not set'}[/]")
     console.print(f"HTTP Proxy: [cyan]{config.proxy or 'Not set'}[/]")
     console.print(f"SOCKS Proxy: [cyan]{config.socks_proxy or 'Not set'}[/]")
     console.print()
-    
+
     # Configure each setting
     configure_tos(config)
     configure_model(config)
     configure_prompt(config)
     configure_proxy(config)
-    
+
     # Save configuration
     if inquirer.confirm(
         message="Save changes?",

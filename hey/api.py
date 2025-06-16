@@ -99,22 +99,25 @@ def get_vqd(client: httpx.Client, config: Config) -> str:
 def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> None:
     """Get chat response from DuckDuckGo."""
     cache = get_cache()
-    
+
     user_message = ChatMessage(role="user", content=f"my question: {query}")
     cache.add_message(user_message)
-    
+
     # prepare chat history
     messages = cache.get_messages()
-    
+
     payload = ChatPayload(
-        model=config.model.value,
-        messages=messages
+        model=config.model,
+        messages=messages,
     )
-    
+
     # convert dataclass to dictionary for serialization
     payload_dict = {
         "model": payload.model,
-        "messages": [{"role": msg.role, "content": msg.content} for msg in messages]
+        "messages": [
+            {"role": msg.role, "content": msg.content}
+            for msg in payload.messages
+        ],
     }
 
     # get headers and add needed headers
@@ -134,7 +137,7 @@ def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> 
 
     log_debug("Sending chat request...", config.verbose)
     start_time = time.time()
-    
+
     with client.stream(
         "POST",
         "https://duckduckgo.com/duckchat/v1/chat",
@@ -160,7 +163,7 @@ def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> 
             chunk_count = 0
             last_update = time.time()
             complete_response = ""
-            
+
             for line in response.iter_lines():
                 if not line:
                     continue
@@ -179,7 +182,7 @@ def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> 
                         if time.time() - last_update >= 1.0:  # Log every second
                             log_debug(f"Received {chunk_count} chunks...", config.verbose)
                             last_update = time.time()
-                            
+
                         message = data["message"]
                         current_response += message
                         complete_response += message
@@ -189,7 +192,7 @@ def get_response(client: httpx.Client, query: str, vqd: str, config: Config) -> 
                     continue
 
         log_debug("Response complete", config.verbose)
-        
+
         if complete_response and not data.get("action") == "error":
             assistant_message = ChatMessage(role="user", content=f"your answer: {complete_response}")
             cache.add_message(assistant_message)
