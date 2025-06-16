@@ -16,14 +16,15 @@ from .cli import run_config
 
 @click.command(context_settings={"ignore_unknown_options": True})
 @click.option('--agree-tos', is_flag=True, help='Agree to the DuckDuckGo TOS')
+@click.option('--quiet', '-q', is_flag=True, help='Do not show progress meter')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--prompt', '-p', help='Set a system prompt for all responses')
 @click.option('--save-prompt', is_flag=True, help='Save the provided prompt to config')
 @click.option('--proxy', help='HTTP/HTTPS proxy URL (e.g., http://proxy:8080)')
 @click.option('--socks-proxy', help='SOCKS proxy URL (e.g., socks5://proxy:1080)')
 @click.argument('args', nargs=-1)
-def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | None,
-        save_prompt: bool, proxy: str | None, socks_proxy: str | None) -> None:
+def cli(args: tuple[str, ...], agree_tos: bool, quiet: bool, verbose: bool,
+        prompt: str | None, save_prompt: bool, proxy: str | None, socks_proxy: str | None) -> None:
     """Hey - DuckDuckGo Chat CLI.
 
     Examples:
@@ -109,7 +110,8 @@ def cli(args: tuple[str, ...], agree_tos: bool, verbose: bool, prompt: str | Non
             SpinnerColumn(),
             TextColumn("[bold blue]Initializing...[/]"),
             transient=True,  # Remove progress bar when done
-            console=Console(stderr=True)  # Show on stderr to not interfere with response
+            console=Console(stderr=True),  # Show on stderr to not interfere with response
+            disable=quiet,
         ) as progress:
             task = progress.add_task("", total=None)  # Indeterminate progress
 
